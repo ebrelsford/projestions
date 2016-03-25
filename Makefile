@@ -8,7 +8,7 @@ download_epsg:
 
 load_epsg:
 	psql $(DB) < "$(data_dir)/EPSG_v8_9.mdb_Tables_PostgreSQL.sql"
-	psql $(DB) < echo "set client_encoding to 'latin1';" | cat - "$(data_dir)/EPSG_v8_9.mdb_Data_PostgreSQL.sql"
+	echo "set client_encoding to 'latin1';" | cat - "$(data_dir)/EPSG_v8_9.mdb_Data_PostgreSQL.sql" | psql $(DB)
 	psql $(DB) < "$(data_dir)/EPSG_v8_9.mdb_FKeys_PostgreSQL.sql"
 
 download_epsg_polygons:
