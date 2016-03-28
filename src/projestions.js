@@ -41,9 +41,9 @@ function buildQuery(options) {
     const combinedSql = `SELECT DISTINCT ${columns.join(', ')}, ST_Area(wkb_geometry)
 FROM areas_of_use area 
 INNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code AND crs.deprecated = 0 
-JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 
-JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code
-JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0
+INNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 
+INNER JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code
+INNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0
 WHERE ${whereConditions.join(' AND ')}
 ORDER BY ST_Area(wkb_geometry)
 ${limit}
