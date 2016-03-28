@@ -6,6 +6,10 @@ var _express2 = _interopRequireDefault(_express);
 
 var _projestions = require('./projestions');
 
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
@@ -38,6 +42,6 @@ app.use(function (err, req, res, next) {
     return res.status(500).json({ error: true });
 });
 
-app.listen(3000, function () {
-    console.log('projestions listening on port 3000!');
+app.listen(_config2.default.port, function () {
+    console.log('projestions listening on port ' + _config2.default.port + '!');
 });

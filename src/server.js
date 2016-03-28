@@ -1,5 +1,6 @@
 import express from 'express';
 import {getProjestions} from './projestions';
+import config from '../config';
 
 var app = express();
 
@@ -35,7 +36,6 @@ app.use((err, req, res, next) => {
     return res.status(500).json({ error: true });
 });
 
-app.listen(3000, () => {
-    console.log('projestions listening on port 3000!');
+app.listen(config.port, () => {
+    console.log(`projestions listening on port ${config.port}!`);
 });
-
