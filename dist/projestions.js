@@ -51,7 +51,7 @@ function buildQuery(options) {
     params.push(Math.max(options.offsetValue, 0));
     var offset = 'OFFSET $' + params.length;
 
-    var combinedSql = 'SELECT ' + columns.join(', ') + '\nFROM areas_of_use area \nINNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code AND crs.deprecated = 0 \nJOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 \nJOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code\nJOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0\nWHERE ' + whereConditions.join(' AND ') + '\nORDER BY ST_Area(wkb_geometry)\n' + limit + '\n' + offset;
+    var combinedSql = 'SELECT DISTINCT ' + columns.join(', ') + ', ST_Area(wkb_geometry)\nFROM areas_of_use area \nINNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code AND crs.deprecated = 0 \nJOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 \nJOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code\nJOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0\nWHERE ' + whereConditions.join(' AND ') + '\nORDER BY ST_Area(wkb_geometry)\n' + limit + '\n' + offset;
 
     return {
         sql: combinedSql,
