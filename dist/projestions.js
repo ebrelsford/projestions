@@ -35,7 +35,7 @@ function buildQuery(options) {
     var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'uom.unit_of_meas_name'];
 
     params.push(options.geom);
-    var whereConditions = ['ST_dwithin(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326)::geography, wkb_geometry::geography, 5000)'];
+    var whereConditions = ['ST_intersects(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)'];
 
     if (options.getGeoJson) {
         columns.push('ST_AsGeoJson(ST_Simplify(wkb_geometry, 0.01), 6) AS geojson_geometry');
