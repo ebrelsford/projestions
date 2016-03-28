@@ -2,7 +2,7 @@
   "name": "projestions",
   "version": "0.1.0",
   "description": "",
-  "main": "server.js",
+  "main": "dist/server.js",
   "repository" : {
     "type" : "git",
     "url" : "https://github.com/ebrelsford/projestions.git"
