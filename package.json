@@ -1,7 +1,7 @@
 {
   "name": "projestions",
   "version": "0.1.0",
-  "description": "",
+  "description": "projection suggestions",
   "main": "dist/server.js",
   "repository" : {
     "type" : "git",
