@@ -26,11 +26,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var MAX_LIMIT = 20;
 
 function buildQuery(options) {
-    /*
-      TODO:
-       - more search options? by crs name, area name
-       - other properties (area, distance preserved)?
-    */
     var params = [];
     var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'uom.unit_of_meas_name'];
 

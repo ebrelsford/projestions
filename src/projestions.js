@@ -6,11 +6,6 @@ import dbconfig from '../dbconfig';
 const MAX_LIMIT = 20;
 
 function buildQuery(options) {
-    /*
-      TODO:
-       - more search options? by crs name, area name
-       - other properties (area, distance preserved)?
-    */
     var params = [];
     var columns = [
         'area_name',
