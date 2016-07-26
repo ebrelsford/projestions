@@ -29,6 +29,18 @@ function buildQuery(options) {
     var params = [];
     var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'uom.unit_of_meas_name'];
 
+    var sortColumn;
+    switch (options.sortBy) {
+        case 'hausdorff':
+            params.push(options.geom);
+            sortColumn = 'ST_HausdorffDistance(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)';
+            break;
+        case 'area':
+        default:
+            sortColumn = "ST_Area(wkb_geometry)";
+            break;
+    }
+
     params.push(options.geom);
     var whereConditions = ['ST_intersects(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)'];
 
@@ -46,7 +58,7 @@ function buildQuery(options) {
     params.push(Math.max(options.offsetValue, 0));
     var offset = 'OFFSET $' + params.length;
 
-    var combinedSql = 'SELECT DISTINCT ' + columns.join(', ') + ', ST_Area(wkb_geometry)\nFROM areas_of_use area \nINNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code AND crs.deprecated = 0 \nINNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 \nINNER JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code\nINNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0\nWHERE ' + whereConditions.join(' AND ') + '\nORDER BY ST_Area(wkb_geometry)\n' + limit + '\n' + offset;
+    var combinedSql = 'SELECT DISTINCT ' + columns.join(', ') + ', ' + sortColumn + ' AS sort_by\nFROM areas_of_use area \nINNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code AND crs.deprecated = 0 \nINNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 \nINNER JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code\nINNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0\nWHERE ' + whereConditions.join(' AND ') + '\nORDER BY sort_by\n' + limit + '\n' + offset;
 
     return {
         sql: combinedSql,

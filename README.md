@@ -32,6 +32,7 @@ geom | GeoJSON feature | (required) the feature you want to find an appropriate 
 geojson | boolean | (optional) `true` to return GeoJSON of areas of use, else JSON is returned, default `false`
 max | number | (optional) maximum number of results to return, default `20`
 offset | number | (optional) number of results to skip, default `0`
+sort | string | (optional) how to sort results, `hausdorff` to sort by the [Hausdorff distance](http://postgis.net/docs/ST_HausdorffDistance.html) or `area` to sort by the area of use's area, default `area`. 
 units | string | (optional) projection units to return, default all
 
 ### Returns

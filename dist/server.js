@@ -28,6 +28,7 @@ app.get('/', function (req, res) {
         getGeoJson: getGeoJson,
         limitValue: req.query.max ? parseInt(req.query.max) : Infinity,
         offsetValue: req.query.offset ? parseInt(req.query.offset) : 0,
+        sortBy: req.query.sort ? req.query.sort : 'area',
         unitsValue: req.query.units
     }).done(function (result) {
         return res.json(result);
