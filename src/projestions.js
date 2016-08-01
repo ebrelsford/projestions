@@ -21,8 +21,12 @@ function buildQuery(options) {
             sortColumn = `ST_HausdorffDistance(ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326), wkb_geometry)`;
             break;
         case 'area':
-        default:
             sortColumn = "ST_Area(wkb_geometry)";
+            break;
+        case 'areadiff':
+        default:
+            params.push(options.geom);
+            sortColumn = `ABS(ST_Area(wkb_geometry) - ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326)))`;
             break;
     }
 
