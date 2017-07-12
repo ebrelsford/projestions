@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "description": "projection suggestions",
   "main": "dist/server.js",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/ebrelsford/projestions.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ebrelsford/projestions.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,10 +15,10 @@
   "author": "Eric Brelsford <ebrelsford@gmail.com> (http://ebrelsford.github.io/)",
   "license": "GPL-3.0",
   "dependencies": {
-    "dbgeo": "^0.1.0",
-    "express": "^4.13.4",
-    "pg": "^4.5.1",
-    "promise": "^7.1.1"
+    "dbgeo": "^0.1.1",
+    "express": "^4.15.3",
+    "pg": "^4.5.6",
+    "promise": "^7.3.1"
   },
   "devDependencies": {
     "babel-cli": "^6.6.0",
