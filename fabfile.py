@@ -12,6 +12,6 @@ def deploy_demo():
 
 def deploy_server():
     with cd('projestions'):
-        run('git pull --no-commit')
+        run('git pull')
         run('npm install')
         run('forever restartall')
