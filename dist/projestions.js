@@ -21,6 +21,10 @@ var _dbconfig = require('../dbconfig');
 
 var _dbconfig2 = _interopRequireDefault(_dbconfig);
 
+var _combine = require('@turf/combine');
+
+var _combine2 = _interopRequireDefault(_combine);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var MAX_LIMIT = 20;
@@ -29,10 +33,21 @@ function buildQuery(options) {
     var params = [];
     var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'uom.unit_of_meas_name'];
 
+    var geom = options.geom;
+
+    // If geom is a GeoJSON FeatureCollection, attempt to combine the features
+    // and use the resulting geometry.
+    //
+    // TODO test with a mixed (polygon, line, point) FeatureCollection
+    var parsedGeom = JSON.parse(geom);
+    if (parsedGeom.type === 'FeatureCollection') {
+        geom = JSON.stringify((0, _combine2.default)(parsedGeom).features[0].geometry);
+    }
+
     var sortColumn;
     switch (options.sortBy) {
         case 'hausdorff':
-            params.push(options.geom);
+            params.push(geom);
             sortColumn = 'ST_HausdorffDistance(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)';
             break;
         case 'area':
@@ -40,12 +55,12 @@ function buildQuery(options) {
             break;
         case 'areadiff':
         default:
-            params.push(options.geom);
+            params.push(geom);
             sortColumn = 'ABS(ST_Area(wkb_geometry) - ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326)))';
             break;
     }
 
-    params.push(options.geom);
+    params.push(geom);
     var whereConditions = ['ST_intersects(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)'];
 
     if (options.getGeoJson) {
