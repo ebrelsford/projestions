@@ -36,6 +36,10 @@ function buildQuery(options) {
 
     var sortColumn;
     switch (options.sortBy) {
+        case 'intersectdiff':
+            params.push(geom);
+            sortColumn = `ABS(ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326))) - ST_Area(wkb_geometry))`;
+            break;
         case 'hausdorff':
             params.push(geom);
             sortColumn = `ST_HausdorffDistance(ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326), wkb_geometry)`;
