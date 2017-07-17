@@ -21,9 +21,15 @@ var _dbconfig = require('../dbconfig');
 
 var _dbconfig2 = _interopRequireDefault(_dbconfig);
 
+var _buffer = require('@turf/buffer');
+
+var _buffer2 = _interopRequireDefault(_buffer);
+
 var _combine = require('@turf/combine');
 
 var _combine2 = _interopRequireDefault(_combine);
+
+var _invariant = require('@turf/invariant');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -41,11 +47,27 @@ function buildQuery(options) {
     // TODO test with a mixed (polygon, line, point) FeatureCollection
     var parsedGeom = JSON.parse(geom);
     if (parsedGeom.type === 'FeatureCollection') {
-        geom = JSON.stringify((0, _combine2.default)(parsedGeom).features[0].geometry);
+        var combined = (0, _combine2.default)(parsedGeom);
+        if (combined.features.length >= 1) {
+            parsedGeom = combined.features[0].geometry;
+            geom = JSON.stringify(parsedGeom);
+        } else {
+            geom = null;
+        }
+    }
+
+    var geomType = (0, _invariant.getGeomType)(parsedGeom);
+    if (geomType !== 'Polygon' && geomType !== 'MultiPolygon') {
+        parsedGeom = (0, _buffer2.default)(parsedGeom, 0.00001, 'kilometers').geometry;
+        geom = JSON.stringify(parsedGeom);
     }
 
     var sortColumn;
     switch (options.sortBy) {
+        case 'intersectdiff':
+            params.push(geom);
+            sortColumn = 'ABS(ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326))) - ST_Area(wkb_geometry))';
+            break;
         case 'hausdorff':
             params.push(geom);
             sortColumn = 'ST_HausdorffDistance(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)';
@@ -60,8 +82,10 @@ function buildQuery(options) {
             break;
     }
 
+    var whereConditions = [];
+
     params.push(geom);
-    var whereConditions = ['ST_intersects(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)'];
+    whereConditions.push('ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326))) / ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326)) >= 0.95');
 
     if (options.getGeoJson) {
         columns.push('ST_AsGeoJson(ST_Simplify(wkb_geometry, 0.01), 6) AS geojson_geometry');
