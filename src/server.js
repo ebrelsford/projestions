@@ -1,8 +1,14 @@
 import express from 'express';
+import bodyParser from 'body-parser';
+import multer from 'multer';
 import {getProjestions} from './projestions';
 import config from '../config';
 
 var app = express();
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+var upload = multer();
 
 app.all('/', (req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -10,17 +16,36 @@ app.all('/', (req, res, next) => {
     next();
 });
 
-app.get('/', (req, res) => {
-    const getGeoJson = req.query.geojson && req.query.geojson === 'true';
-
-    getProjestions({
-        geom: req.query.geom,
+function getQueryParams(query) {
+    const getGeoJson = query.geojson && query.geojson === 'true';
+    return {
+        geom: query.geom,
         getGeoJson: getGeoJson,
-        limitValue: req.query.max ? parseInt(req.query.max) : Infinity,
-        offsetValue: req.query.offset ? parseInt(req.query.offset) : 0,
-        sortBy: req.query.sort,
-        unitsValue: req.query.units
-    })
+        limitValue: query.max ? parseInt(query.max) : Infinity,
+        offsetValue: query.offset ? parseInt(query.offset) : 0,
+        sortBy: query.sort,
+        unitsValue: query.units
+    };
+}
+
+app.get('/', (req, res) => {
+    getProjestions(getQueryParams(req.query))
+    .done(
+        (result) => {
+            return res.json(result);
+        },
+        (err) => {
+            console.error(err);
+            return res.status(500).json({ success: false, data: err });
+        }
+    );
+});
+
+app.post('/', upload.array(), (req, res) => {
+    const params = getQueryParams(req.query);
+    params.geom = req.body.geom;
+
+    getProjestions(params)
     .done(
         (result) => {
             return res.json(result);

@@ -4,6 +4,14 @@ var _express = require('express');
 
 var _express2 = _interopRequireDefault(_express);
 
+var _bodyParser = require('body-parser');
+
+var _bodyParser2 = _interopRequireDefault(_bodyParser);
+
+var _multer = require('multer');
+
+var _multer2 = _interopRequireDefault(_multer);
+
 var _projestions = require('./projestions');
 
 var _config = require('../config');
@@ -14,23 +22,42 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var app = (0, _express2.default)();
 
+app.use(_bodyParser2.default.json());
+app.use(_bodyParser2.default.urlencoded({ extended: true }));
+var upload = (0, _multer2.default)();
+
 app.all('/', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     next();
 });
 
-app.get('/', function (req, res) {
-    var getGeoJson = req.query.geojson && req.query.geojson === 'true';
-
-    (0, _projestions.getProjestions)({
-        geom: req.query.geom,
+function getQueryParams(query) {
+    var getGeoJson = query.geojson && query.geojson === 'true';
+    return {
+        geom: query.geom,
         getGeoJson: getGeoJson,
-        limitValue: req.query.max ? parseInt(req.query.max) : Infinity,
-        offsetValue: req.query.offset ? parseInt(req.query.offset) : 0,
-        sortBy: req.query.sort,
-        unitsValue: req.query.units
-    }).done(function (result) {
+        limitValue: query.max ? parseInt(query.max) : Infinity,
+        offsetValue: query.offset ? parseInt(query.offset) : 0,
+        sortBy: query.sort,
+        unitsValue: query.units
+    };
+}
+
+app.get('/', function (req, res) {
+    (0, _projestions.getProjestions)(getQueryParams(req.query)).done(function (result) {
+        return res.json(result);
+    }, function (err) {
+        console.error(err);
+        return res.status(500).json({ success: false, data: err });
+    });
+});
+
+app.post('/', upload.array(), function (req, res) {
+    var params = getQueryParams(req.query);
+    params.geom = req.body.geom;
+
+    (0, _projestions.getProjestions)(params).done(function (result) {
         return res.json(result);
     }, function (err) {
         console.error(err);
