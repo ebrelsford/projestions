@@ -15,6 +15,7 @@
   "author": "Eric Brelsford <ebrelsford@gmail.com> (http://ebrelsford.github.io/)",
   "license": "GPL-3.0",
   "dependencies": {
+    "@turf/buffer": "^4.5.2",
     "@turf/combine": "^4.5.2",
     "@turf/invariant": "^4.5.2",
     "dbgeo": "^0.1.1",

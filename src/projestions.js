@@ -2,6 +2,7 @@ import dbgeo from 'dbgeo';
 import pg from 'pg';
 import Promise from 'promise';
 import dbconfig from '../dbconfig';
+import turfBuffer from '@turf/buffer';
 import turfCombine from '@turf/combine';
 import { getGeomType } from '@turf/invariant';
 
@@ -34,6 +35,12 @@ function buildQuery(options) {
         }
     }
 
+    const geomType = getGeomType(parsedGeom);
+    if (geomType !== 'Polygon' && geomType !== 'MultiPolygon') {
+        parsedGeom = turfBuffer(parsedGeom, 0.00001, 'kilometers').geometry;
+        geom = JSON.stringify(parsedGeom);
+    }
+
     var sortColumn;
     switch (options.sortBy) {
         case 'intersectdiff':
@@ -54,17 +61,10 @@ function buildQuery(options) {
             break;
     }
 
+    var whereConditions = [];
 
     params.push(geom);
-    var whereConditions = [
-        `ST_intersects(ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326), wkb_geometry)`
-    ];
-
-    const geomType = getGeomType(parsedGeom);
-    if (geomType !== 'Point' && geomType !== 'MultiPoint') {
-        params.push(geom);
-        whereConditions.push(`ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326))) / ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326)) >= 0.95`);
-    }
+    whereConditions.push(`ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326))) / ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326)) >= 0.95`);
 
     if (options.getGeoJson) {
         columns.push('ST_AsGeoJson(ST_Simplify(wkb_geometry, 0.01), 6) AS geojson_geometry');
