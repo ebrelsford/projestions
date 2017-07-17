@@ -3,6 +3,7 @@ import pg from 'pg';
 import Promise from 'promise';
 import dbconfig from '../dbconfig';
 import turfCombine from '@turf/combine';
+import { getGeomType } from '@turf/invariant';
 
 const MAX_LIMIT = 20;
 
@@ -21,9 +22,16 @@ function buildQuery(options) {
     // and use the resulting geometry. 
     //
     // TODO test with a mixed (polygon, line, point) FeatureCollection
-    const parsedGeom = JSON.parse(geom);
+    let parsedGeom = JSON.parse(geom);
     if (parsedGeom.type === 'FeatureCollection') {
-        geom = JSON.stringify(turfCombine(parsedGeom).features[0].geometry);
+        const combined = turfCombine(parsedGeom);
+        if (combined.features.length >= 1) {
+            parsedGeom = combined.features[0].geometry
+            geom = JSON.stringify(parsedGeom);
+        }
+        else {
+            geom = null;
+        }
     }
 
     var sortColumn;
@@ -42,10 +50,17 @@ function buildQuery(options) {
             break;
     }
 
+
     params.push(geom);
     var whereConditions = [
         `ST_intersects(ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326), wkb_geometry)`
     ];
+
+    const geomType = getGeomType(parsedGeom);
+    if (geomType !== 'Point' && geomType !== 'MultiPoint') {
+        params.push(geom);
+        whereConditions.push(`ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($${params.length}), 4326))) >= 0.95`);
+    }
 
     if (options.getGeoJson) {
         columns.push('ST_AsGeoJson(ST_Simplify(wkb_geometry, 0.01), 6) AS geojson_geometry');

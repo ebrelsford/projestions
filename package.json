@@ -16,6 +16,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@turf/combine": "^4.5.2",
+    "@turf/invariant": "^4.5.2",
     "dbgeo": "^0.1.1",
     "express": "^4.15.3",
     "pg": "^4.5.6",
