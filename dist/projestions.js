@@ -82,7 +82,7 @@ function buildQuery(options) {
             break;
     }
 
-    var whereConditions = [];
+    var whereConditions = ['ST_intersects(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)'];
 
     params.push(geom);
     whereConditions.push('ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326))) / ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326)) >= 0.95');
