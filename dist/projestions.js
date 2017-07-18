@@ -62,30 +62,29 @@ function buildQuery(options) {
         geom = JSON.stringify(parsedGeom);
     }
 
+    // For the CTE geometry
+    params.push(geom);
+
     var sortColumn;
     switch (options.sortBy) {
         case 'intersectdiff':
-            params.push(geom);
-            sortColumn = 'ABS(ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326))) - ST_Area(wkb_geometry))';
+            sortColumn = 'ABS(ST_Area(ST_Intersection(wkb_geometry, i.geom)) - ST_Area(wkb_geometry))';
             break;
         case 'hausdorff':
-            params.push(geom);
-            sortColumn = 'ST_HausdorffDistance(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)';
+            sortColumn = 'ST_HausdorffDistance(i.geom, wkb_geometry)';
             break;
         case 'area':
             sortColumn = "ST_Area(wkb_geometry)";
             break;
         case 'areadiff':
         default:
-            params.push(geom);
-            sortColumn = 'ABS(ST_Area(wkb_geometry) - ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326)))';
+            sortColumn = 'ABS(ST_Area(wkb_geometry) - i.area)';
             break;
     }
 
-    var whereConditions = ['ST_intersects(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326), wkb_geometry)'];
+    var whereConditions = ['ST_intersects(i.geom, wkb_geometry)'];
 
-    params.push(geom);
-    whereConditions.push('ST_Area(ST_Intersection(wkb_geometry, ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326))) / ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($' + params.length + '), 4326)) >= 0.95');
+    whereConditions.push('ST_Area(ST_Intersection(wkb_geometry, i.geom)) / i.area >= 0.95');
 
     if (options.getGeoJson) {
         columns.push('ST_AsGeoJson(ST_Simplify(wkb_geometry, 0.01), 6) AS geojson_geometry');
@@ -101,7 +100,7 @@ function buildQuery(options) {
     params.push(Math.max(options.offsetValue, 0));
     var offset = 'OFFSET $' + params.length;
 
-    var combinedSql = 'SELECT DISTINCT ' + columns.join(', ') + ', ' + sortColumn + ' AS sort_by\nFROM areas_of_use area \nINNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code AND crs.deprecated = 0 \nINNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 \nINNER JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code\nINNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0\nWHERE ' + whereConditions.join(' AND ') + '\nORDER BY sort_by\n' + limit + '\n' + offset;
+    var combinedSql = 'WITH input_geom AS (\n    SELECT ST_SetSRID(ST_GeomFromGeoJSON($1), 4326) AS geom, ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS area\n)\nSELECT DISTINCT ' + columns.join(', ') + ', ' + sortColumn + ' AS sort_by\nFROM input_geom i, areas_of_use a\nINNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code AND crs.deprecated = 0 \nINNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 \nINNER JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code\nINNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0\nWHERE ' + whereConditions.join(' AND ') + '\nORDER BY sort_by\n' + limit + '\n' + offset;
 
     return {
         sql: combinedSql,
