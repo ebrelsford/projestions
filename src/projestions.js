@@ -7,6 +7,11 @@ import turfCombine from '@turf/combine';
 import { getGeomType } from '@turf/invariant';
 
 const MAX_LIMIT = 20;
+const pool = new pg.Pool(dbconfig);
+
+pool.on('error', (err, client) => {
+    console.error('Unexpected error on idle client', err);
+})
 
 function buildQuery(options) {
     var params = [];
@@ -104,27 +109,16 @@ ${offset}`;
 export function getProjestions(options) {
     const {sql, params} = buildQuery(options);
     return new Promise((resolve, reject) => {
-        pg.connect(dbconfig, (err, client, done) => {
-            // Handle connection errors
-            if (err) {
-                done();
+        pool.query(sql, params)
+            .catch(err => {
                 console.error(err);
                 return reject(err);
-            }
-
-            var query = client.query(sql, params);
-
-            var results = [];
-            query.on('row', (row) => {
-                results.push(row);
-            });
-
-            // After all data is returned, close connection and return results
-            query.on('end', () => {
-                done();
+            })
+            .then(res => {
+                const rows = res.rows;
                 if (options.getGeoJson) {
                     dbgeo.parse({
-                        data: results,
+                        data: rows,
                         geometryColumn: 'geojson_geometry'
                     }, (err, result) => {
                         if (err) {
@@ -135,9 +129,8 @@ export function getProjestions(options) {
                     });
                 }
                 else {
-                    return resolve(results);
+                    return resolve(rows);
                 }
             });
-        });
     });
 }

@@ -34,6 +34,11 @@ var _invariant = require('@turf/invariant');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var MAX_LIMIT = 20;
+var pool = new _pg2.default.Pool(_dbconfig2.default);
+
+pool.on('error', function (err, client) {
+    console.error('Unexpected error on idle client', err);
+});
 
 function buildQuery(options) {
     var params = [];
@@ -115,39 +120,25 @@ function getProjestions(options) {
     var params = _buildQuery.params;
 
     return new _promise2.default(function (resolve, reject) {
-        _pg2.default.connect(_dbconfig2.default, function (err, client, done) {
-            // Handle connection errors
-            if (err) {
-                done();
-                console.error(err);
-                return reject(err);
+        pool.query(sql, params).catch(function (err) {
+            console.error(err);
+            return reject(err);
+        }).then(function (res) {
+            var rows = res.rows;
+            if (options.getGeoJson) {
+                _dbgeo2.default.parse({
+                    data: rows,
+                    geometryColumn: 'geojson_geometry'
+                }, function (err, result) {
+                    if (err) {
+                        console.error(err);
+                        return reject(err);
+                    }
+                    return resolve(result);
+                });
+            } else {
+                return resolve(rows);
             }
-
-            var query = client.query(sql, params);
-
-            var results = [];
-            query.on('row', function (row) {
-                results.push(row);
-            });
-
-            // After all data is returned, close connection and return results
-            query.on('end', function () {
-                done();
-                if (options.getGeoJson) {
-                    _dbgeo2.default.parse({
-                        data: results,
-                        geometryColumn: 'geojson_geometry'
-                    }, function (err, result) {
-                        if (err) {
-                            console.error(err);
-                            return reject(err);
-                        }
-                        return resolve(result);
-                    });
-                } else {
-                    return resolve(results);
-                }
-            });
         });
     });
 }
