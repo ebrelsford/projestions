@@ -87,9 +87,7 @@ function buildQuery(options) {
             break;
     }
 
-    var whereConditions = ['ST_intersects(i.geom, wkb_geometry)'];
-
-    whereConditions.push('ST_Area(ST_Intersection(wkb_geometry, i.geom)) / i.area >= 0.95');
+    var whereConditions = ['ST_intersects(i.geom, wkb_geometry)', 'ST_Area(ST_Intersection(wkb_geometry, i.geom)) / i.area >= 0.95'];
 
     if (options.getGeoJson) {
         columns.push('ST_AsGeoJson(ST_Simplify(wkb_geometry, 0.01), 6) AS geojson_geometry');
