@@ -67,8 +67,8 @@ function buildQuery(options) {
     }
 
     var whereConditions = [
-        'ST_intersects(i.geom, wkb_geometry)',
-        'ST_Area(ST_Intersection(wkb_geometry, i.geom)) / i.area >= 0.95'
+        'ST_Intersects(wkb_geometry, i.geom)',
+        '(ST_CoveredBy(i.geom, wkb_geometry) OR ST_Area(ST_Intersection(wkb_geometry, i.geom)) / i.area >= 0.95)'
     ];
 
     if (options.getGeoJson) {
@@ -90,11 +90,11 @@ function buildQuery(options) {
 )
 SELECT DISTINCT ${columns.join(', ')}, ${sortColumn} AS sort_by
 FROM input_geom i, areas_of_use a
-INNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code AND crs.deprecated = 0 
-INNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code AND cs.deprecated = 0 
+INNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code
+INNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code
 INNER JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code
-INNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code AND uom.deprecated = 0
-WHERE ${whereConditions.join(' AND ')}
+INNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code
+WHERE crs.deprecated = 0 AND cs.deprecated = 0 AND uom.deprecated = 0 AND ${whereConditions.join(' AND ')}
 ORDER BY sort_by
 ${limit}
 ${offset}`;
