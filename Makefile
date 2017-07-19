@@ -16,6 +16,12 @@ load_epsg:
 	psql $(DB) < "$(data_dir)/EPSG_v9_1.mdb_FKeys_PostgreSQL.sql"
 	psql $(DB) -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO projestions_readonly"
 
+add_simplified_geometry_column:
+	psql $(DB) -c "ALTER TABLE areas_of_use ADD COLUMN wkb_geometry_simplified GEOMETRY(MultiPolygon,4326)"
+	psql $(DB) -c "CREATE INDEX ON areas_of_use USING GIST (wkb_geometry_simplified)"
+	psql $(DB) -c "UPDATE areas_of_use SET wkb_geometry_simplified = ST_Simplify(wkb_geometry, 0.03)"
+
+
 download_epsg_polygons:
 	mkdir -p $(data_dir)
 	wget -P $(data_dir) http://www.epsg.org/polygons/EPSG_Polygons_Ver_9.1.zip
