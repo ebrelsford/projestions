@@ -42,7 +42,7 @@ pool.on('error', function (err, client) {
 
 function buildQuery(options) {
     var params = [];
-    var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'uom.unit_of_meas_name'];
+    var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'unit_of_meas_name'];
 
     var geom = options.geom;
 
@@ -73,28 +73,28 @@ function buildQuery(options) {
     var sortColumn;
     switch (options.sortBy) {
         case 'intersectdiff':
-            sortColumn = 'ABS(ST_Area(ST_Intersection(wkb_geometry, i.geom)) - ST_Area(wkb_geometry))';
+            sortColumn = 'ABS(ST_Area(ST_Intersection(wkb_geometry_simplified, i.geom)) - ST_Area(wkb_geometry_simplified))';
             break;
         case 'hausdorff':
-            sortColumn = 'ST_HausdorffDistance(i.geom, wkb_geometry)';
+            sortColumn = 'ST_HausdorffDistance(i.geom, wkb_geometry_simplified)';
             break;
         case 'area':
-            sortColumn = "ST_Area(wkb_geometry)";
+            sortColumn = "ST_Area(wkb_geometry_simplified)";
             break;
         case 'areadiff':
         default:
-            sortColumn = 'ABS(ST_Area(wkb_geometry) - i.area)';
+            sortColumn = 'ABS(ST_Area(wkb_geometry_simplified) - i.area)';
             break;
     }
 
-    var whereConditions = ['ST_Intersects(wkb_geometry, i.geom)', '(ST_CoveredBy(i.geom, wkb_geometry) OR ST_Area(ST_Intersection(wkb_geometry, i.geom)) / i.area >= 0.95)'];
-
     if (options.getGeoJson) {
-        columns.push('ST_AsGeoJson(ST_Simplify(wkb_geometry, 0.01), 6) AS geojson_geometry');
+        columns.push('ST_AsGeoJson(wkb_geometry_simplified, 6) AS geojson_geometry');
     }
+
+    var whereConditions = [];
     if (options.unitsValue) {
         params.push(options.unitsValue);
-        whereConditions.push('uom.unit_of_meas_name = $' + params.length);
+        whereConditions.push('unit_of_meas_name = $' + params.length);
     }
 
     params.push(Math.min(options.limitValue, MAX_LIMIT));
@@ -103,7 +103,7 @@ function buildQuery(options) {
     params.push(Math.max(options.offsetValue, 0));
     var offset = 'OFFSET $' + params.length;
 
-    var combinedSql = 'WITH input_geom AS (\n    SELECT ST_SetSRID(ST_GeomFromGeoJSON($1), 4326) AS geom, ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS area\n)\nSELECT DISTINCT ' + columns.join(', ') + ', ' + sortColumn + ' AS sort_by\nFROM input_geom i, areas_of_use a\nINNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = area_code\nINNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code\nINNER JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code\nINNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code\nWHERE crs.deprecated = 0 AND cs.deprecated = 0 AND uom.deprecated = 0 AND ' + whereConditions.join(' AND ') + '\nORDER BY sort_by\n' + limit + '\n' + offset;
+    var combinedSql = 'WITH input_geom AS (\n    SELECT ST_SetSRID(ST_GeomFromGeoJSON($1), 4326) AS geom, ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS area\n),\nmatching_areas AS (\n    SELECT area_code\n    FROM areas_of_use, input_geom\n    WHERE ST_Intersects(wkb_geometry_simplified, input_geom.geom) AND (ST_CoveredBy(input_geom.geom, wkb_geometry_simplified) OR ST_Area(ST_Intersection(wkb_geometry_simplified, input_geom.geom)) / input_geom.area >= 0.95)\n)\nSELECT DISTINCT ' + columns.join(', ') + ', ' + sortColumn + ' AS sort_by\nFROM input_geom i, projestions_joined\nWHERE area_code IN (SELECT * FROM matching_areas) ' + (whereConditions.length ? whereConditions.join(' AND ') : '') + '\nORDER BY sort_by\n' + limit + '\n' + offset;
 
     return {
         sql: combinedSql,
