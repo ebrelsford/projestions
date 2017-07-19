@@ -35,3 +35,5 @@ add_join_table:
 	psql $(DB) -U projesstions -c "DROP TABLE projestions_joined"
 	psql $(DB) -U projesstions -c "CREATE TABLE projestions_joined AS SELECT a.wkb_geometry, ST_Simplify(wkb_geometry, 0.03) AS wkb_geometry_simplified, a.area_name, a.area_code, a.region, crs.coord_ref_sys_code, crs.coord_ref_sys_name, uom.unit_of_meas_name FROM areas_of_use a INNER JOIN epsg_coordinatereferencesystem crs ON crs.area_of_use_code = a.area_code INNER JOIN epsg_coordinatesystem cs ON cs.coord_sys_code = crs.coord_sys_code INNER JOIN epsg_coordinateaxis axis ON axis.coord_sys_code = cs.coord_sys_code INNER JOIN epsg_unitofmeasure uom ON uom.uom_code = axis.uom_code WHERE crs.deprecated = 0 AND cs.deprecated = 0 AND uom.deprecated = 0"
 	psql $(DB) -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO projestions_readonly"
+
+refresh_data: clear_epsg load_epsg load_epsg_polygons add_simplified_geometry_column add_join_table
