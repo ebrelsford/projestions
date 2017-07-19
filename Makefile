@@ -14,6 +14,7 @@ load_epsg:
 	psql $(DB) < "$(data_dir)/EPSG_v9_1.mdb_Tables_PostgreSQL.sql"
 	echo "set client_encoding to 'latin1';" | cat - "$(data_dir)/EPSG_v9_1.mdb_Data_PostgreSQL.sql" | psql $(DB)
 	psql $(DB) < "$(data_dir)/EPSG_v9_1.mdb_FKeys_PostgreSQL.sql"
+	psql $(DB) -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO projestions_readonly"
 
 download_epsg_polygons:
 	mkdir -p $(data_dir)
@@ -21,4 +22,5 @@ download_epsg_polygons:
 	unzip $(data_dir)/EPSG_Polygons_Ver_9.1.zip -d $(data_dir)
 
 load_epsg_polygons:
-	ogr2ogr -f "PostgreSQL" PG:"dbname=$(DB) user=projesstions" -nlt PROMOTE_TO_MULTI -overwrite $(data_dir)/EPSG_Polygons_test.shp -nln areas_of_use
+	ogr2ogr -f "PostgreSQL" PG:"dbname=$(DB)" -nlt PROMOTE_TO_MULTI -overwrite $(data_dir)/EPSG_Polygons.shp -nln areas_of_use
+	psql $(DB) -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO projestions_readonly"
