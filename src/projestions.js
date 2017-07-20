@@ -32,7 +32,7 @@ function buildQuery(options) {
     if (parsedGeom.type === 'FeatureCollection') {
         const combined = turfCombine(parsedGeom);
         if (combined.features.length >= 1) {
-            parsedGeom = combined.features[0].geometry
+            parsedGeom = combined.features[0].geometry;
             geom = JSON.stringify(parsedGeom);
         }
         else {
