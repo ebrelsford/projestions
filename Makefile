@@ -26,7 +26,7 @@ load_epsg_polygons:
 	psql $(DB) -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO projestions_readonly"
 
 add_simplified_geometry_column:
-	psql $(DB) -c "ALTER TABLE areas_of_use ADD COLUMN wkb_geometry_simplified GEOMETRY(MultiPolygon,4326)"
+	psql $(DB) -c "ALTER TABLE areas_of_use ADD COLUMN wkb_geometry_simplified GEOMETRY(Geometry,4326)"
 	psql $(DB) -c "CREATE INDEX ON areas_of_use USING GIST (wkb_geometry_simplified)"
 	psql $(DB) -c "UPDATE areas_of_use SET wkb_geometry_simplified = ST_SimplifyPreserveTopology(wkb_geometry, 0.03)"
 
