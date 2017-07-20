@@ -83,7 +83,7 @@ function buildQuery(options) {
     const offset = `OFFSET $${params.length}`;
 
     const combinedSql = `WITH input_geom AS (
-    SELECT ST_SetSRID(ST_GeomFromGeoJSON($1), 4326) AS geom, ST_Area(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS area
+    SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS geom, ST_Area(ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326))) AS area
 ),
 matching_areas AS (
     SELECT area_code
