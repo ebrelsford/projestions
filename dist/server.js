@@ -22,8 +22,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var app = (0, _express2.default)();
 
-app.use(_bodyParser2.default.json());
-app.use(_bodyParser2.default.urlencoded({ extended: true }));
+app.use(_bodyParser2.default.json({ limit: '5mb' }));
+app.use(_bodyParser2.default.urlencoded({ limit: '5mb', extended: true }));
 var upload = (0, _multer2.default)();
 
 app.all('/', function (req, res, next) {
