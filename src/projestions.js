@@ -13,13 +13,28 @@ pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err);
 })
 
+function getSortColumn(name) {
+    switch (name) {
+        case 'intersectdiff':
+            return `ABS(ST_Area(ST_Intersection(wkb_geometry_simplified, i.geom)) - ST_Area(wkb_geometry_simplified))`;
+        case 'hausdorff':
+            return `ST_HausdorffDistance(i.geom, wkb_geometry_simplified)`;
+        case 'area':
+            return "ST_Area(wkb_geometry_simplified)";
+        case 'areadiff':
+        default:
+            return `ABS(ST_Area(wkb_geometry_simplified) - i.area)`;
+    }
+}
+
 function buildQuery(options) {
     const params = [];
     const columns = [
         'area_name',
         'coord_ref_sys_code',
         'coord_ref_sys_name',
-        'unit_of_meas_name'
+        'unit_of_meas_name',
+        `${getSortColumn(options.sortBy)} AS sort_by`
     ];
     const geom = options.geom;
 
@@ -41,23 +56,6 @@ function buildQuery(options) {
 
     // First param is for the CTE geometry
     params.push(JSON.stringify(parsedGeom));
-
-    let sortColumn;
-    switch (options.sortBy) {
-        case 'intersectdiff':
-            sortColumn = `ABS(ST_Area(ST_Intersection(wkb_geometry_simplified, i.geom)) - ST_Area(wkb_geometry_simplified))`;
-            break;
-        case 'hausdorff':
-            sortColumn = `ST_HausdorffDistance(i.geom, wkb_geometry_simplified)`;
-            break;
-        case 'area':
-            sortColumn = "ST_Area(wkb_geometry_simplified)";
-            break;
-        case 'areadiff':
-        default:
-            sortColumn = `ABS(ST_Area(wkb_geometry_simplified) - i.area)`;
-            break;
-    }
 
     if (options.getGeoJson) {
         columns.push('ST_AsGeoJson(wkb_geometry_simplified, 6) AS geojson_geometry');
@@ -87,7 +85,7 @@ matching_areas AS (
     FROM areas_of_use, input_geom
     WHERE ST_Intersects(wkb_geometry_simplified, input_geom.geom) AND (ST_CoveredBy(input_geom.geom, wkb_geometry_simplified) OR ST_Area(ST_Intersection(wkb_geometry_simplified, input_geom.geom)) / input_geom.area >= 0.95)
 )
-SELECT DISTINCT ${columns.join(', ')}, ${sortColumn} AS sort_by
+SELECT DISTINCT ${columns.join(', ')}
 FROM input_geom i, projestions_joined
 WHERE area_code IN (SELECT * FROM matching_areas) ${whereConditions.length ? whereConditions.join(' AND ') : ''}
 ORDER BY sort_by, coord_ref_sys_code
