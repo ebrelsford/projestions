@@ -75,6 +75,11 @@ function buildQuery(options) {
     params.push(Math.max(options.offsetValue, 0));
     const offset = `OFFSET $${params.length}`;
 
+    // We use a few CTEs here for intermediate results:
+    //  * valid_geom: the prepared geometry with SRID and made valid
+    //  * input_geom: the valid_geom plus its area
+    //  * matching_areas: areas in the EPSG data that cover at least 95% of the
+    //  input geometry
     const combinedSql = `WITH valid_geom AS (
     SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS geom
 ),
@@ -85,7 +90,12 @@ input_geom AS (
 matching_areas AS (
     SELECT area_code
     FROM areas_of_use, input_geom
-    WHERE ST_Intersects(wkb_geometry_simplified, input_geom.geom) AND (ST_CoveredBy(input_geom.geom, wkb_geometry_simplified) OR ST_Area(ST_Intersection(wkb_geometry_simplified, input_geom.geom)) / input_geom.area >= 0.95)
+    WHERE 
+        ST_Intersects(wkb_geometry_simplified, input_geom.geom)
+        AND (
+            ST_CoveredBy(input_geom.geom, wkb_geometry_simplified) OR
+            ST_Area(ST_Intersection(wkb_geometry_simplified, input_geom.geom)) / input_geom.area >= 0.95
+        )
 )
 SELECT DISTINCT ${columns.join(', ')}
 FROM input_geom i, projestions_joined
