@@ -41,7 +41,7 @@ function buildQuery(options) {
     }
 
     const geomType = getGeomType(parsedGeom);
-    if (geomType !== 'Polygon' && geomType !== 'MultiPolygon') {
+    if (geomType !== 'Polygon') {
         parsedGeom = turfBuffer(parsedGeom, 0.00001, 'kilometers').geometry;
         geom = JSON.stringify(parsedGeom);
     }
@@ -82,8 +82,12 @@ function buildQuery(options) {
     params.push(Math.max(options.offsetValue, 0));
     const offset = `OFFSET $${params.length}`;
 
-    const combinedSql = `WITH input_geom AS (
-    SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS geom, ST_Area(ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326))) AS area
+    const combinedSql = `WITH valid_geom AS (
+    SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS geom
+),
+input_geom AS (
+    SELECT v.geom AS geom, ST_Area(v.geom) AS area
+    FROM valid_geom v
 ),
 matching_areas AS (
     SELECT area_code
