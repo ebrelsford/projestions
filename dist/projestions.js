@@ -43,7 +43,6 @@ pool.on('error', function (err, client) {
 function buildQuery(options) {
     var params = [];
     var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'unit_of_meas_name'];
-
     var geom = options.geom;
 
     // If geom is a GeoJSON FeatureCollection, attempt to combine the features
@@ -53,20 +52,17 @@ function buildQuery(options) {
         var combined = (0, _combine2.default)(parsedGeom);
         if (combined.features.length >= 1) {
             parsedGeom = combined.features[0].geometry;
-            geom = JSON.stringify(parsedGeom);
-        } else {
-            geom = null;
         }
     }
 
-    var geomType = (0, _invariant.getGeomType)(parsedGeom);
-    if (geomType !== 'Polygon') {
+    // If geom is not a Polygon, buffer it to make it one since we'll be talking
+    // about its area later
+    if ((0, _invariant.getGeomType)(parsedGeom) !== 'Polygon') {
         parsedGeom = (0, _buffer2.default)(parsedGeom, 0.00001, 'kilometers').geometry;
-        geom = JSON.stringify(parsedGeom);
     }
 
-    // For the CTE geometry
-    params.push(geom);
+    // First param is for the CTE geometry
+    params.push(JSON.stringify(parsedGeom));
 
     var sortColumn = undefined;
     switch (options.sortBy) {

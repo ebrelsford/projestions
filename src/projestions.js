@@ -21,8 +21,7 @@ function buildQuery(options) {
         'coord_ref_sys_name',
         'unit_of_meas_name'
     ];
-
-    let geom = options.geom;
+    const geom = options.geom;
 
     // If geom is a GeoJSON FeatureCollection, attempt to combine the features
     // and use the resulting geometry. 
@@ -31,21 +30,17 @@ function buildQuery(options) {
         const combined = turfCombine(parsedGeom);
         if (combined.features.length >= 1) {
             parsedGeom = combined.features[0].geometry;
-            geom = JSON.stringify(parsedGeom);
-        }
-        else {
-            geom = null;
         }
     }
 
-    const geomType = getGeomType(parsedGeom);
-    if (geomType !== 'Polygon') {
+    // If geom is not a Polygon, buffer it to make it one since we'll be talking
+    // about its area later
+    if (getGeomType(parsedGeom) !== 'Polygon') {
         parsedGeom = turfBuffer(parsedGeom, 0.00001, 'kilometers').geometry;
-        geom = JSON.stringify(parsedGeom);
     }
 
-    // For the CTE geometry
-    params.push(geom);
+    // First param is for the CTE geometry
+    params.push(JSON.stringify(parsedGeom));
 
     let sortColumn;
     switch (options.sortBy) {
