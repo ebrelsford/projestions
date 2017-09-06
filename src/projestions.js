@@ -93,7 +93,7 @@ matching_areas AS (
 SELECT DISTINCT ${columns.join(', ')}, ${sortColumn} AS sort_by
 FROM input_geom i, projestions_joined
 WHERE area_code IN (SELECT * FROM matching_areas) ${whereConditions.length ? whereConditions.join(' AND ') : ''}
-ORDER BY sort_by
+ORDER BY sort_by, coord_ref_sys_code
 ${limit}
 ${offset}`;
 

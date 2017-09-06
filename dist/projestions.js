@@ -103,7 +103,7 @@ function buildQuery(options) {
     params.push(Math.max(options.offsetValue, 0));
     var offset = 'OFFSET $' + params.length;
 
-    var combinedSql = 'WITH input_geom AS (\n    SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS geom, ST_Area(ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326))) AS area\n),\nmatching_areas AS (\n    SELECT area_code\n    FROM areas_of_use, input_geom\n    WHERE ST_Intersects(wkb_geometry_simplified, input_geom.geom) AND (ST_CoveredBy(input_geom.geom, wkb_geometry_simplified) OR ST_Area(ST_Intersection(wkb_geometry_simplified, input_geom.geom)) / input_geom.area >= 0.95)\n)\nSELECT DISTINCT ' + columns.join(', ') + ', ' + sortColumn + ' AS sort_by\nFROM input_geom i, projestions_joined\nWHERE area_code IN (SELECT * FROM matching_areas) ' + (whereConditions.length ? whereConditions.join(' AND ') : '') + '\nORDER BY sort_by\n' + limit + '\n' + offset;
+    var combinedSql = 'WITH input_geom AS (\n    SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)) AS geom, ST_Area(ST_MakeValid(ST_SetSRID(ST_GeomFromGeoJSON($1), 4326))) AS area\n),\nmatching_areas AS (\n    SELECT area_code\n    FROM areas_of_use, input_geom\n    WHERE ST_Intersects(wkb_geometry_simplified, input_geom.geom) AND (ST_CoveredBy(input_geom.geom, wkb_geometry_simplified) OR ST_Area(ST_Intersection(wkb_geometry_simplified, input_geom.geom)) / input_geom.area >= 0.95)\n)\nSELECT DISTINCT ' + columns.join(', ') + ', ' + sortColumn + ' AS sort_by\nFROM input_geom i, projestions_joined\nWHERE area_code IN (SELECT * FROM matching_areas) ' + (whereConditions.length ? whereConditions.join(' AND ') : '') + '\nORDER BY sort_by, coord_ref_sys_code\n' + limit + '\n' + offset;
 
     return {
         sql: combinedSql,
