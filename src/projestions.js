@@ -14,8 +14,8 @@ pool.on('error', (err, client) => {
 })
 
 function buildQuery(options) {
-    var params = [];
-    var columns = [
+    const params = [];
+    const columns = [
         'area_name',
         'coord_ref_sys_code',
         'coord_ref_sys_name',
@@ -47,7 +47,7 @@ function buildQuery(options) {
     // For the CTE geometry
     params.push(geom);
 
-    var sortColumn;
+    let sortColumn;
     switch (options.sortBy) {
         case 'intersectdiff':
             sortColumn = `ABS(ST_Area(ST_Intersection(wkb_geometry_simplified, i.geom)) - ST_Area(wkb_geometry_simplified))`;
@@ -68,7 +68,7 @@ function buildQuery(options) {
         columns.push('ST_AsGeoJson(wkb_geometry_simplified, 6) AS geojson_geometry');
     }
 
-    var whereConditions = [];
+    const whereConditions = [];
     if (options.unitsValue) {
         params.push(options.unitsValue);
         whereConditions.push(`unit_of_meas_name = $${params.length}`);

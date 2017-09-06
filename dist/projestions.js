@@ -68,7 +68,7 @@ function buildQuery(options) {
     // For the CTE geometry
     params.push(geom);
 
-    var sortColumn;
+    var sortColumn = undefined;
     switch (options.sortBy) {
         case 'intersectdiff':
             sortColumn = 'ABS(ST_Area(ST_Intersection(wkb_geometry_simplified, i.geom)) - ST_Area(wkb_geometry_simplified))';
