@@ -54,14 +54,10 @@ function getSortColumn(name) {
     }
 }
 
-function buildQuery(options) {
-    var params = [];
-    var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'unit_of_meas_name', getSortColumn(options.sortBy) + ' AS sort_by'];
-    var geom = options.geom;
-
+function prepareGeometry(geojsonString) {
     // If geom is a GeoJSON FeatureCollection, attempt to combine the features
     // and use the resulting geometry.
-    var parsedGeom = JSON.parse(geom);
+    var parsedGeom = JSON.parse(geojsonString);
     if (parsedGeom.type === 'FeatureCollection') {
         var combined = (0, _combine2.default)(parsedGeom);
         if (combined.features.length >= 1) {
@@ -74,9 +70,15 @@ function buildQuery(options) {
     if ((0, _invariant.getGeomType)(parsedGeom) !== 'Polygon') {
         parsedGeom = (0, _buffer2.default)(parsedGeom, 0.00001, 'kilometers').geometry;
     }
+    return parsedGeom;
+}
 
-    // First param is for the CTE geometry
-    params.push(JSON.stringify(parsedGeom));
+function buildQuery(options) {
+    var params = [];
+    var columns = ['area_name', 'coord_ref_sys_code', 'coord_ref_sys_name', 'unit_of_meas_name', getSortColumn(options.sortBy) + ' AS sort_by'];
+
+    // First param is the prepared geometry for the CTE ($1)
+    params.push(JSON.stringify(prepareGeometry(options.geom)));
 
     if (options.getGeoJson) {
         columns.push('ST_AsGeoJson(wkb_geometry_simplified, 6) AS geojson_geometry');
