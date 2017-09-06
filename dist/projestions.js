@@ -48,8 +48,6 @@ function buildQuery(options) {
 
     // If geom is a GeoJSON FeatureCollection, attempt to combine the features
     // and use the resulting geometry.
-    //
-    // TODO test with a mixed (polygon, line, point) FeatureCollection
     var parsedGeom = JSON.parse(geom);
     if (parsedGeom.type === 'FeatureCollection') {
         var combined = (0, _combine2.default)(parsedGeom);

@@ -26,8 +26,6 @@ function buildQuery(options) {
 
     // If geom is a GeoJSON FeatureCollection, attempt to combine the features
     // and use the resulting geometry. 
-    //
-    // TODO test with a mixed (polygon, line, point) FeatureCollection
     let parsedGeom = JSON.parse(geom);
     if (parsedGeom.type === 'FeatureCollection') {
         const combined = turfCombine(parsedGeom);
