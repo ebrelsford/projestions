@@ -10,7 +10,7 @@
   "scripts": {
     "test": "eslint src && jest --coverage --forceExit",
     "babel": "babel src/ --presets es2015 --watch --out-dir dist",
-    "watch": "nodemon --ignore src/ --ignore test/ dist/server.js",
+    "watch": "nodemon --ignore test/ --exec babel-node src/server.js",
     "precommit": "npm test",
     "prepush": "npm test"
   },
