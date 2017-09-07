@@ -55,15 +55,17 @@ function buildQuery(options) {
     'unit_of_meas_name',
     `${getSortColumn(options.sortBy)} AS sort_by`,
   ];
+  const whereConditions = [
+    'area_code IN (SELECT * FROM matching_areas)',
+  ];
 
-    // First param is the prepared geometry for the CTE ($1)
+  // First param is the prepared geometry for the CTE ($1)
   params.push(JSON.stringify(prepareGeometry(options.geom)));
 
   if (options.getGeoJson) {
     columns.push('ST_AsGeoJson(wkb_geometry_simplified, 6) AS geojson_geometry');
   }
 
-  const whereConditions = [];
   if (options.unitsValue) {
     params.push(options.unitsValue);
     whereConditions.push(`unit_of_meas_name = $${params.length}`);
@@ -99,7 +101,7 @@ matching_areas AS (
 )
 SELECT DISTINCT ${columns.join(', ')}
 FROM input_geom i, projestions_joined
-WHERE area_code IN (SELECT * FROM matching_areas) ${whereConditions.length ? whereConditions.join(' AND ') : ''}
+WHERE ${whereConditions.join(' AND ')}
 ORDER BY sort_by, coord_ref_sys_code
 ${limit}
 ${offset}`;
