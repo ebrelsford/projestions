@@ -110,12 +110,16 @@ function buildQuery(options) {
 }
 
 function getProjestions(options) {
-  var _buildQuery = buildQuery(options),
-      sql = _buildQuery.sql,
-      params = _buildQuery.params;
-
   return new _promise2.default(function (resolve, reject) {
-    pool.query(sql, params).catch(function (err) {
+    if (!options.geom) {
+      return reject('No geom provided');
+    }
+
+    var _buildQuery = buildQuery(options),
+        sql = _buildQuery.sql,
+        params = _buildQuery.params;
+
+    return pool.query(sql, params).catch(function (err) {
       console.error(err);
       return reject(err);
     }).then(function (res) {

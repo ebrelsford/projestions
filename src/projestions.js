@@ -113,9 +113,12 @@ ${offset}`;
 }
 
 export default function getProjestions(options) {
-  const { sql, params } = buildQuery(options);
   return new Promise((resolve, reject) => {
-    pool.query(sql, params)
+    if (!options.geom) {
+      return reject('No geom provided');
+    }
+    const { sql, params } = buildQuery(options);
+    return pool.query(sql, params)
       .catch((err) => {
         console.error(err);
         return reject(err);
