@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 jest.dontMock('../dist/projestions.js');
-const projestions = require('../dist/projestions.js');
+const getProjestions = require('../dist/projestions.js').default;
 
 function openData(name) {
   return fs.readFileSync(path.join(__dirname, 'data', name), { encoding: 'utf8' });
@@ -11,7 +11,7 @@ function openData(name) {
 test('point', () => {
   expect.assertions(1);
   return expect(
-    projestions.getProjestions({
+    getProjestions({
       geom: openData('point.geojson'),
       getGeoJson: false,
       limitValue: 10,
@@ -24,7 +24,7 @@ test('point', () => {
 test('point areadiff', () => {
   expect.assertions(1);
   return expect(
-    projestions.getProjestions({
+    getProjestions({
       geom: openData('point.geojson'),
       getGeoJson: false,
       limitValue: 10,
@@ -37,7 +37,7 @@ test('point areadiff', () => {
 test('point intersectdiff', () => {
   expect.assertions(1);
   return expect(
-    projestions.getProjestions({
+    getProjestions({
       geom: openData('point.geojson'),
       getGeoJson: false,
       limitValue: 10,
@@ -50,7 +50,7 @@ test('point intersectdiff', () => {
 test('point hausdorff', () => {
   expect.assertions(1);
   return expect(
-    projestions.getProjestions({
+    getProjestions({
       geom: openData('point.geojson'),
       getGeoJson: false,
       limitValue: 10,
@@ -63,7 +63,7 @@ test('point hausdorff', () => {
 test('line', () => {
   expect.assertions(1);
   return expect(
-    projestions.getProjestions({
+    getProjestions({
       geom: openData('line.geojson'),
       getGeoJson: false,
       limitValue: 10,
@@ -76,7 +76,7 @@ test('line', () => {
 test('polygon', () => {
   expect.assertions(1);
   return expect(
-    projestions.getProjestions({
+    getProjestions({
       geom: openData('polygon.geojson'),
       getGeoJson: false,
       limitValue: 10,
@@ -89,7 +89,7 @@ test('polygon', () => {
 test('point line and polygon', () => {
   expect.assertions(1);
   return expect(
-    projestions.getProjestions({
+    getProjestions({
       geom: openData('combined.geojson'),
       getGeoJson: false,
       limitValue: 10,

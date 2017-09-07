@@ -8,7 +8,7 @@
     "url": "https://github.com/ebrelsford/projestions.git"
   },
   "scripts": {
-    "test": "jest --coverage --forceExit",
+    "test": "eslint src && jest --coverage --forceExit",
     "babel": "babel src/ --presets es2015 --watch --out-dir dist",
     "watch": "nodemon --ignore src/ --ignore test/ dist/server.js"
   },
@@ -29,6 +29,11 @@
     "babel-cli": "^6.26.0",
     "babel-jest": "^21.0.0",
     "babel-preset-es2015": "^6.24.1",
+    "eslint": "^4.6.1",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-react": "^7.3.0",
     "jest": "^21.0.1",
     "nodemon": "^1.9.1"
   },
