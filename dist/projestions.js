@@ -56,7 +56,7 @@ function getSortColumn(name) {
 
 function prepareGeometry(geojsonString) {
     // If geom is a GeoJSON FeatureCollection, attempt to combine the features
-    // and use the resulting geometry.
+    // and use the resulting geometry. 
     var parsedGeom = JSON.parse(geojsonString);
     if (parsedGeom.type === 'FeatureCollection') {
         var combined = (0, _combine2.default)(parsedGeom);
@@ -110,10 +110,9 @@ function buildQuery(options) {
 }
 
 function getProjestions(options) {
-    var _buildQuery = buildQuery(options);
-
-    var sql = _buildQuery.sql;
-    var params = _buildQuery.params;
+    var _buildQuery = buildQuery(options),
+        sql = _buildQuery.sql,
+        params = _buildQuery.params;
 
     return new _promise2.default(function (resolve, reject) {
         pool.query(sql, params).catch(function (err) {
