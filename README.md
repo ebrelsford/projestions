@@ -22,7 +22,7 @@ Similar things have been done before:
 
 ### Endpoint
 
-`https://projest.io/ns/api/`
+`GET` or `POST` to `https://projest.io/ns/api/`
 
 ### Parameters
 
