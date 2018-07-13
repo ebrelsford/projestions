@@ -4,3 +4,4 @@ node_modules
 dbconfig.js
 config.js
 *.pyc
+local_variables.sh

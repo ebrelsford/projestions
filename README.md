@@ -6,7 +6,7 @@ Provides a simple API for finding map projections appropriate for a particular a
 
 ## Data
 
-The results of the API based on the [EPSG](http://www.epsg.org/)'s CRS data (v9.1) and its "area of use" data (v9.1). Both datasets are available to [download on the EPSG site](http://www.epsg.org/EPSGDataset/DownloadDataset.aspx). You might be interested in their [terms of use](http://www.epsg.org/TermsOfUse).
+The results of the API based on the [EPSG](http://www.epsg.org/)'s CRS data (v9.4) and its "area of use" data (v9.2.1). Both datasets are available to [download on the EPSG site](http://www.epsg.org/EPSGDataset/DownloadDataset.aspx). You might be interested in their [terms of use](http://www.epsg.org/TermsOfUse).
 
 ## Prior art
 
